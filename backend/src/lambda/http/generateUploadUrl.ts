@@ -11,11 +11,11 @@ export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
     const userId = getUserId(event)
-    await createAttachmentPresignedUrl(todoId, userId)
+    const url = await createAttachmentPresignedUrl(todoId, userId)
     return {
       statusCode: 200,
       body: JSON.stringify({
-        success: true
+        uploadUrl: url
       })
     }
   }
