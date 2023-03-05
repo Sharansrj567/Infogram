@@ -1,11 +1,11 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 
-import { verify } from 'jsonwebtoken'
+import { decode, verify } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
 import Axios from 'axios'
-// import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import { Jwt } from '../../auth/Jwt'
 
 const logger = createLogger('auth')
 
@@ -53,15 +53,20 @@ export const handler = async (
 }
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
+  logger.info(`authHeader: ${authHeader}`)
   const token = getToken(authHeader)
-  // const jwt: Jwt = decode(token, { complete: true }) as Jwt
-  const data = (await Axios.get(jwksUrl)) as any
-  const cert =
-    '-----BEGIN CERTIFICATE-----\n' +
-    data.keys[0].x5c +
-    '\n-----END CERTIFICATE-----'
+  const jwt = decode(token, { complete: true }) as Jwt
+  const { data } = await Axios.get(jwksUrl)
+  const keyId = jwt.header.kid
+  const correctKey = data.keys.filter((k: any) => k.kid === keyId)
+  const cert = `-----BEGIN CERTIFICATE-----\n${correctKey[0].x5c[0]}\n-----END CERTIFICATE-----`
+  logger.info('Verifying token', {
+    token,
+    Certificate: cert,
+    verifyResult: verify(token, cert, { algorithms: ['RS256'] })
+  })
   //@ts-ignore
-  return verify(token, cert, { algorithms: ['RS256'] })
+  return verify(token, cert, { algorithms: ['RS256'] }) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
