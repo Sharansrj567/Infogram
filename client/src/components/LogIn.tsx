@@ -15,12 +15,21 @@ export class LogIn extends React.PureComponent<LogInProps, LogInState> {
 
   render() {
     return (
-      <div>
-        <h1>Please log in</h1>
-
-        <Button onClick={this.onLogin} size="huge" color="olive">
-          Log in
-        </Button>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingLeft: '5%'
+        }}
+      >
+        <img
+          src={
+            'https://res.cloudinary.com/teleopdassets/image/upload/v1678091668/undraw_Folder_re_apfp_b8ofym.png'
+          }
+          className="img-fluid"
+        />
       </div>
     )
   }

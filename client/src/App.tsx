@@ -7,6 +7,7 @@ import { EditTodo } from './components/EditTodo'
 import { LogIn } from './components/LogIn'
 import { NotFound } from './components/NotFound'
 import { Todos } from './components/Todos'
+import './App.css'
 
 export interface AppProps {}
 
@@ -36,10 +37,15 @@ export default class App extends Component<AppProps, AppState> {
   render() {
     return (
       <div>
-        <Segment style={{ padding: '8em 0em' }} vertical>
-          <Grid container stackable verticalAlign="middle">
+        <Segment style={{ padding: '2em 0em' }} vertical>
+          <Grid
+            className="text-center"
+            container
+            stackable
+            verticalAlign="middle"
+          >
             <Grid.Row>
-              <Grid.Column width={16}>
+              <Grid.Column>
                 <Router history={this.props.history}>
                   {this.generateMenu()}
 
@@ -55,11 +61,22 @@ export default class App extends Component<AppProps, AppState> {
 
   generateMenu() {
     return (
-      <Menu>
+      <Menu position="center">
         <Menu.Item name="home">
-          <Link to="/">Home</Link>
+          <Link to="/">
+            {' '}
+            <h3>Home</h3>
+          </Link>
         </Menu.Item>
-
+        <h2
+          style={{
+            paddingLeft: '15%',
+            paddingRight: '5%'
+          }}
+          className="animate-charcter"
+        >
+          Infogram A simple minimalistic data organizer
+        </h2>
         <Menu.Menu position="right">{this.logInLogOutButton()}</Menu.Menu>
       </Menu>
     )
@@ -69,13 +86,13 @@ export default class App extends Component<AppProps, AppState> {
     if (this.props.auth.isAuthenticated()) {
       return (
         <Menu.Item name="logout" onClick={this.handleLogout}>
-          Log Out
+          <h3>Log Out</h3>
         </Menu.Item>
       )
     } else {
       return (
         <Menu.Item name="login" onClick={this.handleLogin}>
-          Log In
+          <h3>Log In</h3>
         </Menu.Item>
       )
     }

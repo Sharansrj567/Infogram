@@ -1,0 +1,2165 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "The AWS CloudFormation template for this Serverless application",
+    "Resources": {
+        "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketEncryption": {
+                    "ServerSideEncryptionConfiguration": [
+                        {
+                            "ServerSideEncryptionByDefault": {
+                                "SSEAlgorithm": "AES256"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "ServerlessDeploymentBucket"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "s3:*",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:",
+                                            {
+                                                "Ref": "AWS::Partition"
+                                            },
+                                            ":s3:::",
+                                            {
+                                                "Ref": "ServerlessDeploymentBucket"
+                                            },
+                                            "/*"
+                                        ]
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:",
+                                            {
+                                                "Ref": "AWS::Partition"
+                                            },
+                                            ":s3:::",
+                                            {
+                                                "Ref": "ServerlessDeploymentBucket"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            ],
+                            "Condition": {
+                                "Bool": {
+                                    "aws:SecureTransport": false
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "AuthLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-Auth"
+            }
+        },
+        "GetTodosLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-GetTodos"
+            }
+        },
+        "CreateTodoLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-CreateTodo"
+            }
+        },
+        "UpdateTodoLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-UpdateTodo"
+            }
+        },
+        "DeleteTodoLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-DeleteTodo"
+            }
+        },
+        "GenerateUploadUrlLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/infogram-app-dev-GenerateUploadUrl"
+            }
+        },
+        "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:TagResource"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev*:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "xray:PutTraceSegments",
+                                        "xray:PutTelemetryRecords"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                }
+            }
+        },
+        "EnterpriseLogAccessIamRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "arn:aws:iam::802587217904:root"
+                            },
+                            "Action": "sts:AssumeRole",
+                            "Condition": {
+                                "StringEquals": {
+                                    "sts:ExternalId": "ServerlessEnterprise-9269c7ff-ea5b-4fdb-bf47-7db66a833121"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "LogFilterAccess",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:FilterLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::GetAtt": [
+                                                "AuthLogGroup",
+                                                "Arn"
+                                            ]
+                                        },
+                                        {
+                                            "Fn::GetAtt": [
+                                                "GetTodosLogGroup",
+                                                "Arn"
+                                            ]
+                                        },
+                                        {
+                                            "Fn::GetAtt": [
+                                                "CreateTodoLogGroup",
+                                                "Arn"
+                                            ]
+                                        },
+                                        {
+                                            "Fn::GetAtt": [
+                                                "UpdateTodoLogGroup",
+                                                "Arn"
+                                            ]
+                                        },
+                                        {
+                                            "Fn::GetAtt": [
+                                                "DeleteTodoLogGroup",
+                                                "Arn"
+                                            ]
+                                        },
+                                        {
+                                            "Fn::GetAtt": [
+                                                "GenerateUploadUrlLogGroup",
+                                                "Arn"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AuthLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_Auth.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-Auth",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "IamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "AuthLogGroup"
+            ]
+        },
+        "GetTodosLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_GetTodos.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-GetTodos",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "GetTodosIamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "GetTodosIamRoleLambdaExecution",
+                "GetTodosLogGroup"
+            ]
+        },
+        "CreateTodoLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_CreateTodo.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-CreateTodo",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "CreateTodoIamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "CreateTodoIamRoleLambdaExecution",
+                "CreateTodoLogGroup"
+            ]
+        },
+        "UpdateTodoLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_UpdateTodo.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-UpdateTodo",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "UpdateTodoIamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "UpdateTodoIamRoleLambdaExecution",
+                "UpdateTodoLogGroup"
+            ]
+        },
+        "DeleteTodoLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_DeleteTodo.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-DeleteTodo",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "DeleteTodoIamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "DeleteTodoIamRoleLambdaExecution",
+                "DeleteTodoLogGroup"
+            ]
+        },
+        "GenerateUploadUrlLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/infogram-app.zip"
+                },
+                "Handler": "s_GenerateUploadUrl.handler",
+                "Runtime": "nodejs12.x",
+                "FunctionName": "infogram-app-dev-GenerateUploadUrl",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                },
+                "Environment": {
+                    "Variables": {
+                        "TODOS_TABLE": "Todos-dev",
+                        "TODOS_CREATED_AT_INDEX": "CreatedAtIndex",
+                        "ATTACHMENT_S3_BUCKET": "infogram-images-dev",
+                        "SIGNED_URL_EXPIRATION": "300"
+                    }
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "GenerateUploadUrlIamRoleLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "GenerateUploadUrlIamRoleLambdaExecution",
+                "GenerateUploadUrlLogGroup"
+            ]
+        },
+        "AuthLambdaVersionvaRhg5zdNdVhQREln5KaTmxH7VwgC7N05cne1dKWLY": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "AuthLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "GetTodosLambdaVersionbeqLZQl1Lo7NOyLe83MO4iDGVh9MhlWFlHoohC51P8": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "GetTodosLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "CreateTodoLambdaVersionSrr8Gl1xVo39qvidoV4R7XB7WLgLyiwm9u0qERuE3Y": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "CreateTodoLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "UpdateTodoLambdaVersionwz9XOhMs2GZd5ZBqGFyXYioWnLboWxlwnunbKdBYY": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "UpdateTodoLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "DeleteTodoLambdaVersion4uopDzznv8NiTH8XzGnJlz4wZFThtYZwFZLNxdc": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "DeleteTodoLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "GenerateUploadUrlLambdaVersionH0de5f2UKd2x18ZYQPhhgN6A4NhdoJuv9TzvxmmCT8": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "GenerateUploadUrlLambdaFunction"
+                },
+                "CodeSha256": "S9zONBLoWIirYZit6qJMoR2enJywV19tQiPenOPusd0="
+            }
+        },
+        "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "dev-infogram-app",
+                "EndpointConfiguration": {
+                    "Types": [
+                        "EDGE"
+                    ]
+                },
+                "Policy": ""
+            }
+        },
+        "ApiGatewayResourceTodos": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Fn::GetAtt": [
+                        "ApiGatewayRestApi",
+                        "RootResourceId"
+                    ]
+                },
+                "PathPart": "todos",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayResourceTodosTodoidVar": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "ApiGatewayResourceTodos"
+                },
+                "PathPart": "{todoId}",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayResourceTodosTodoidVarAttachment": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVar"
+                },
+                "PathPart": "attachment",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayMethodTodosOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "AuthorizationType": "NONE",
+                "HttpMethod": "OPTIONS",
+                "MethodResponses": [
+                    {
+                        "StatusCode": "200",
+                        "ResponseParameters": {
+                            "method.response.header.Access-Control-Allow-Origin": true,
+                            "method.response.header.Access-Control-Allow-Headers": true,
+                            "method.response.header.Access-Control-Allow-Methods": true
+                        },
+                        "ResponseModels": {}
+                    }
+                ],
+                "RequestParameters": {},
+                "Integration": {
+                    "Type": "MOCK",
+                    "RequestTemplates": {
+                        "application/json": "{statusCode:200}"
+                    },
+                    "ContentHandling": "CONVERT_TO_TEXT",
+                    "IntegrationResponses": [
+                        {
+                            "StatusCode": "200",
+                            "ResponseParameters": {
+                                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST,GET'"
+                            },
+                            "ResponseTemplates": {
+                                "application/json": ""
+                            }
+                        }
+                    ]
+                },
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodos"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayMethodTodosTodoidVarOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "AuthorizationType": "NONE",
+                "HttpMethod": "OPTIONS",
+                "MethodResponses": [
+                    {
+                        "StatusCode": "200",
+                        "ResponseParameters": {
+                            "method.response.header.Access-Control-Allow-Origin": true,
+                            "method.response.header.Access-Control-Allow-Headers": true,
+                            "method.response.header.Access-Control-Allow-Methods": true
+                        },
+                        "ResponseModels": {}
+                    }
+                ],
+                "RequestParameters": {},
+                "Integration": {
+                    "Type": "MOCK",
+                    "RequestTemplates": {
+                        "application/json": "{statusCode:200}"
+                    },
+                    "ContentHandling": "CONVERT_TO_TEXT",
+                    "IntegrationResponses": [
+                        {
+                            "StatusCode": "200",
+                            "ResponseParameters": {
+                                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,PATCH'"
+                            },
+                            "ResponseTemplates": {
+                                "application/json": ""
+                            }
+                        }
+                    ]
+                },
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVar"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayMethodTodosTodoidVarAttachmentOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "AuthorizationType": "NONE",
+                "HttpMethod": "OPTIONS",
+                "MethodResponses": [
+                    {
+                        "StatusCode": "200",
+                        "ResponseParameters": {
+                            "method.response.header.Access-Control-Allow-Origin": true,
+                            "method.response.header.Access-Control-Allow-Headers": true,
+                            "method.response.header.Access-Control-Allow-Methods": true
+                        },
+                        "ResponseModels": {}
+                    }
+                ],
+                "RequestParameters": {},
+                "Integration": {
+                    "Type": "MOCK",
+                    "RequestTemplates": {
+                        "application/json": "{statusCode:200}"
+                    },
+                    "ContentHandling": "CONVERT_TO_TEXT",
+                    "IntegrationResponses": [
+                        {
+                            "StatusCode": "200",
+                            "ResponseParameters": {
+                                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+                            },
+                            "ResponseTemplates": {
+                                "application/json": ""
+                            }
+                        }
+                    ]
+                },
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVarAttachment"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "ApiGatewayMethodTodosGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "GET",
+                "RequestParameters": {},
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodos"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": false,
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": {
+                    "Ref": "AuthApiGatewayAuthorizer"
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":apigateway:",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ":lambda:path/2015-03-31/functions/",
+                                {
+                                    "Fn::GetAtt": [
+                                        "GetTodosLambdaFunction",
+                                        "Arn"
+                                    ]
+                                },
+                                "/invocations"
+                            ]
+                        ]
+                    }
+                },
+                "MethodResponses": []
+            },
+            "DependsOn": "AuthApiGatewayAuthorizer"
+        },
+        "ApiGatewayMethodTodosPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "RequestParameters": {},
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodos"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": false,
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": {
+                    "Ref": "AuthApiGatewayAuthorizer"
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":apigateway:",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ":lambda:path/2015-03-31/functions/",
+                                {
+                                    "Fn::GetAtt": [
+                                        "CreateTodoLambdaFunction",
+                                        "Arn"
+                                    ]
+                                },
+                                "/invocations"
+                            ]
+                        ]
+                    }
+                },
+                "MethodResponses": [],
+                "RequestValidatorId": {
+                    "Ref": "ApiGatewayInfogramappRequestValidator"
+                },
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiGatewayMethodTodosPostApplicationJsonModel"
+                    }
+                }
+            },
+            "DependsOn": "AuthApiGatewayAuthorizer"
+        },
+        "ApiGatewayMethodTodosTodoidVarPatch": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "PATCH",
+                "RequestParameters": {},
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVar"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": false,
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": {
+                    "Ref": "AuthApiGatewayAuthorizer"
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":apigateway:",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ":lambda:path/2015-03-31/functions/",
+                                {
+                                    "Fn::GetAtt": [
+                                        "UpdateTodoLambdaFunction",
+                                        "Arn"
+                                    ]
+                                },
+                                "/invocations"
+                            ]
+                        ]
+                    }
+                },
+                "MethodResponses": [],
+                "RequestValidatorId": {
+                    "Ref": "ApiGatewayInfogramappRequestValidator"
+                },
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiGatewayMethodTodosTodoidVarPatchApplicationJsonModel"
+                    }
+                }
+            },
+            "DependsOn": "AuthApiGatewayAuthorizer"
+        },
+        "ApiGatewayMethodTodosTodoidVarDelete": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "DELETE",
+                "RequestParameters": {},
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVar"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": false,
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": {
+                    "Ref": "AuthApiGatewayAuthorizer"
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":apigateway:",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ":lambda:path/2015-03-31/functions/",
+                                {
+                                    "Fn::GetAtt": [
+                                        "DeleteTodoLambdaFunction",
+                                        "Arn"
+                                    ]
+                                },
+                                "/invocations"
+                            ]
+                        ]
+                    }
+                },
+                "MethodResponses": []
+            },
+            "DependsOn": "AuthApiGatewayAuthorizer"
+        },
+        "ApiGatewayMethodTodosTodoidVarAttachmentPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "RequestParameters": {},
+                "ResourceId": {
+                    "Ref": "ApiGatewayResourceTodosTodoidVarAttachment"
+                },
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": false,
+                "AuthorizationType": "CUSTOM",
+                "AuthorizerId": {
+                    "Ref": "AuthApiGatewayAuthorizer"
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":apigateway:",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ":lambda:path/2015-03-31/functions/",
+                                {
+                                    "Fn::GetAtt": [
+                                        "GenerateUploadUrlLambdaFunction",
+                                        "Arn"
+                                    ]
+                                },
+                                "/invocations"
+                            ]
+                        ]
+                    }
+                },
+                "MethodResponses": []
+            },
+            "DependsOn": "AuthApiGatewayAuthorizer"
+        },
+        "ApiGatewayInfogramappRequestValidator": {
+            "Type": "AWS::ApiGateway::RequestValidator",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ValidateRequestBody": true,
+                "ValidateRequestParameters": true,
+                "Name": "infogram-app-dev | Validate request body and querystring parameters"
+            }
+        },
+        "ApiGatewayMethodTodosPostApplicationJsonModel": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ContentType": "application/json",
+                "Schema": {
+                    "$schema": "http://json-schema.org/draft-04/schema#",
+                    "title": "group",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "dueDate": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "dueDate"
+                    ],
+                    "additionalProperties": false
+                }
+            }
+        },
+        "ApiGatewayMethodTodosTodoidVarPatchApplicationJsonModel": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ContentType": "application/json",
+                "Schema": {
+                    "$schema": "http://json-schema.org/draft-04/schema#",
+                    "title": "group",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "dueDate": {
+                            "type": "string"
+                        },
+                        "done": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "dueDate",
+                        "done"
+                    ],
+                    "additionalProperties": false
+                }
+            }
+        },
+        "AuthApiGatewayAuthorizer": {
+            "Type": "AWS::ApiGateway::Authorizer",
+            "Properties": {
+                "IdentitySource": "method.request.header.Authorization",
+                "Name": "Auth",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "AuthorizerUri": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":apigateway:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":lambda:path/2015-03-31/functions/",
+                            {
+                                "Fn::GetAtt": [
+                                    "AuthLambdaFunction",
+                                    "Arn"
+                                ]
+                            },
+                            "/invocations"
+                        ]
+                    ]
+                },
+                "Type": "TOKEN"
+            }
+        },
+        "ApiGatewayDeployment1678079501998": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "StageName": "dev"
+            },
+            "DependsOn": [
+                "ApiGatewayMethodTodosOptions",
+                "ApiGatewayMethodTodosTodoidVarOptions",
+                "ApiGatewayMethodTodosTodoidVarAttachmentOptions",
+                "ApiGatewayMethodTodosGet",
+                "ApiGatewayMethodTodosPost",
+                "ApiGatewayMethodTodosTodoidVarPatch",
+                "ApiGatewayMethodTodosTodoidVarDelete",
+                "ApiGatewayMethodTodosTodoidVarAttachmentPost"
+            ]
+        },
+        "GetTodosLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "GetTodosLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "AuthLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "AuthLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "CreateTodoLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "CreateTodoLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "UpdateTodoLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "UpdateTodoLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "DeleteTodoLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "DeleteTodoLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "GenerateUploadUrlLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "GenerateUploadUrlLambdaFunction",
+                        "Arn"
+                    ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":execute-api:",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref": "AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref": "ApiGatewayRestApi"
+                            },
+                            "/*/*"
+                        ]
+                    ]
+                }
+            }
+        },
+        "ApiGatewayLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/api-gateway/infogram-app-dev"
+            }
+        },
+        "CustomApiGatewayAccountCloudWatchRole": {
+            "Type": "Custom::ApiGatewayAccountRole",
+            "Version": 1,
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "CustomDashresourceDashapigwDashcwDashroleLambdaFunction",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "IamRoleCustomResourcesLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "dev",
+                                    "infogram-app",
+                                    "custom-resources-lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            ":",
+                                            [
+                                                "arn",
+                                                {
+                                                    "Ref": "AWS::Partition"
+                                                },
+                                                "iam:",
+                                                {
+                                                    "Ref": "AWS::AccountId"
+                                                },
+                                                "role/*"
+                                            ]
+                                        ]
+                                    },
+                                    "Action": [
+                                        "iam:AttachRolePolicy",
+                                        "iam:CreateRole",
+                                        "iam:ListAttachedRolePolicies",
+                                        "iam:PassRole"
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            ":",
+                                            [
+                                                "arn",
+                                                {
+                                                    "Ref": "AWS::Partition"
+                                                },
+                                                "apigateway:*::/account"
+                                            ]
+                                        ]
+                                    },
+                                    "Action": [
+                                        "apigateway:GET",
+                                        "apigateway:PATCH"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "ServerlessDeploymentBucket"
+                    },
+                    "S3Key": "serverless/infogram-app/dev/1678079534445-2023-03-06T05:12:14.445Z/custom-resources.zip"
+                },
+                "FunctionName": "infogram-app-dev-custom-resource-apigw-cw-role",
+                "Handler": "api-gateway-cloud-watch-role/handler.handler",
+                "MemorySize": 1024,
+                "Runtime": "nodejs16.x",
+                "Timeout": 180,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "IamRoleCustomResourcesLambdaExecution",
+                        "Arn"
+                    ]
+                }
+            },
+            "DependsOn": [
+                "IamRoleCustomResourcesLambdaExecution"
+            ]
+        },
+        "GetTodosIamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev-GetTodos:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:Query"
+                                    ],
+                                    "Resource": "arn:aws:dynamodb:us-east-1:*:table/Todos-dev/index/CreatedAtIndex"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "xray:PutTraceSegments"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            "GetTodos",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                },
+                "ManagedPolicyArns": []
+            }
+        },
+        "CreateTodoIamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev-CreateTodo:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:PutItem"
+                                    ],
+                                    "Resource": "arn:aws:dynamodb:us-east-1:*:table/Todos-dev"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "xray:PutTraceSegments"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            "CreateTodo",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                },
+                "ManagedPolicyArns": []
+            }
+        },
+        "UpdateTodoIamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev-UpdateTodo:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:UpdateItem",
+                                        "dynamodb:GetItem"
+                                    ],
+                                    "Resource": "arn:aws:dynamodb:us-east-1:*:table/Todos-dev"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "xray:PutTraceSegments"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            "UpdateTodo",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                },
+                "ManagedPolicyArns": []
+            }
+        },
+        "DeleteTodoIamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev-DeleteTodo:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:DeleteItem",
+                                        "dynamodb:GetItem"
+                                    ],
+                                    "Resource": "arn:aws:dynamodb:us-east-1:*:table/Todos-dev"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "xray:PutTraceSegments"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            "DeleteTodo",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                },
+                "ManagedPolicyArns": []
+            }
+        },
+        "GenerateUploadUrlIamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "infogram-app",
+                                    "dev",
+                                    "lambda"
+                                ]
+                            ]
+                        },
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/infogram-app-dev-GenerateUploadUrl:*:*"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject"
+                                    ],
+                                    "Resource": "arn:aws:s3:::infogram-images-dev/*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:UpdateItem",
+                                        "dynamodb:GetItem"
+                                    ],
+                                    "Resource": "arn:aws:dynamodb:us-east-1:*:table/Todos-dev"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Path": "/",
+                "RoleName": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "infogram-app",
+                            "dev",
+                            "GenerateUploadUrl",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "lambdaRole"
+                        ]
+                    ]
+                },
+                "ManagedPolicyArns": []
+            }
+        },
+        "GatewayResponseDefault4XX": {
+            "Type": "AWS::ApiGateway::GatewayResponse",
+            "Properties": {
+                "ResponseParameters": {
+                    "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+                    "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    "gatewayresponse.header.Access-Control-Allow-Methods": "'GET,OPTIONS,POST'"
+                },
+                "ResponseType": "DEFAULT_4XX",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                }
+            }
+        },
+        "TodosTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "userId",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "todoId",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "createdAt",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "userId",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "todoId",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST",
+                "TableName": "Todos-dev",
+                "LocalSecondaryIndexes": [
+                    {
+                        "IndexName": "CreatedAtIndex",
+                        "KeySchema": [
+                            {
+                                "AttributeName": "userId",
+                                "KeyType": "HASH"
+                            },
+                            {
+                                "AttributeName": "createdAt",
+                                "KeyType": "RANGE"
+                            }
+                        ],
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        }
+                    }
+                ]
+            }
+        },
+        "AttachmentsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketName": "infogram-images-dev",
+                "CorsConfiguration": {
+                    "CorsRules": [
+                        {
+                            "AllowedOrigins": [
+                                "*"
+                            ],
+                            "AllowedHeaders": [
+                                "*"
+                            ],
+                            "AllowedMethods": [
+                                "GET",
+                                "PUT",
+                                "POST",
+                                "DELETE",
+                                "HEAD"
+                            ],
+                            "MaxAge": 3000
+                        }
+                    ]
+                }
+            }
+        },
+        "BucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Id": "InfogramPolicy",
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "PublicReadForGetBucketObjects",
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": "s3:GetObject",
+                            "Resource": "arn:aws:s3:::infogram-images-dev/*"
+                        }
+                    ]
+                },
+                "Bucket": {
+                    "Ref": "AttachmentsBucket"
+                }
+            }
+        },
+        "CWLSubFilterAuthLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "AuthLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterGetTodosLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "GetTodosLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterCreateTodoLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "CreateTodoLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterUpdateTodoLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "UpdateTodoLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterDeleteTodoLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "DeleteTodoLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterGenerateUploadUrlLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+                "LogGroupName": {
+                    "Ref": "GenerateUploadUrlLogGroup"
+                }
+            }
+        },
+        "CWLSubFilterApiGatewayLogGroupUsEast1": {
+            "Type": "AWS::Logs::SubscriptionFilter",
+            "Properties": {
+                "DestinationArn": "arn:aws:logs:us-east-1:802587217904:destination:9269c7ff-ea5b-4fdb-bf47-7db66a833121#KvQZjsYxt1pMg47My0#infogram-app#dev",
+                "FilterPattern": "\"SLS_ACCESS_LOG\"",
+                "LogGroupName": {
+                    "Ref": "ApiGatewayLogGroup"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "ServerlessDeploymentBucketName": {
+            "Value": {
+                "Ref": "ServerlessDeploymentBucket"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-ServerlessDeploymentBucketName"
+            }
+        },
+        "EnterpriseLogAccessIamRole": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "EnterpriseLogAccessIamRole",
+                    "Arn"
+                ]
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-EnterpriseLogAccessIamRole"
+            }
+        },
+        "AuthLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "AuthLambdaVersionvaRhg5zdNdVhQREln5KaTmxH7VwgC7N05cne1dKWLY"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-AuthLambdaFunctionQualifiedArn"
+            }
+        },
+        "GetTodosLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "GetTodosLambdaVersionbeqLZQl1Lo7NOyLe83MO4iDGVh9MhlWFlHoohC51P8"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-GetTodosLambdaFunctionQualifiedArn"
+            }
+        },
+        "CreateTodoLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "CreateTodoLambdaVersionSrr8Gl1xVo39qvidoV4R7XB7WLgLyiwm9u0qERuE3Y"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-CreateTodoLambdaFunctionQualifiedArn"
+            }
+        },
+        "UpdateTodoLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "UpdateTodoLambdaVersionwz9XOhMs2GZd5ZBqGFyXYioWnLboWxlwnunbKdBYY"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-UpdateTodoLambdaFunctionQualifiedArn"
+            }
+        },
+        "DeleteTodoLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "DeleteTodoLambdaVersion4uopDzznv8NiTH8XzGnJlz4wZFThtYZwFZLNxdc"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-DeleteTodoLambdaFunctionQualifiedArn"
+            }
+        },
+        "GenerateUploadUrlLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+                "Ref": "GenerateUploadUrlLambdaVersionH0de5f2UKd2x18ZYQPhhgN6A4NhdoJuv9TzvxmmCT8"
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-GenerateUploadUrlLambdaFunctionQualifiedArn"
+            }
+        },
+        "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "https://",
+                        {
+                            "Ref": "ApiGatewayRestApi"
+                        },
+                        ".execute-api.",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        ".",
+                        {
+                            "Ref": "AWS::URLSuffix"
+                        },
+                        "/dev"
+                    ]
+                ]
+            },
+            "Export": {
+                "Name": "sls-infogram-app-dev-ServiceEndpoint"
+            }
+        }
+    }
+}

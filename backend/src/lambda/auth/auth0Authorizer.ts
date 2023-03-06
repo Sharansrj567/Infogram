@@ -9,8 +9,7 @@ import { Jwt } from '../../auth/Jwt'
 
 const logger = createLogger('auth')
 
-const jwksUrl =
-  'https://dev-wjjbpfgmwn7dawkj.us.auth0.com/.well-known/jwks.json'
+const jwksUrl = 'https://xyz.us.auth0.com/.well-known/jwks.json'
 
 export const handler = async (
   event: CustomAuthorizerEvent
